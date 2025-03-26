@@ -1,0 +1,16 @@
+%s	String	"TX123"	"TX123"
+%d	Integer	15.99	"15"
+%.2f	Float (2 dec.)	15.999	"16.00"
+%04d	Zero-padded	42	"0042"
+
+
+$amount = 50.5;
+$balance = 100.356;
+$message = sprintf(
+    'Insufficient funds. Tried to debit %.2f (available: %.2f)',
+    $amount,
+    $balance
+);
+
+output
+"Insufficient funds. Tried to debit 50.50 (available: 100.36)"

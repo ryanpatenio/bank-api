@@ -4,18 +4,35 @@ namespace App\Services;
 
 use App\Models\ApiKey;
 use App\Models\Transactions;
+use App\Utilities\TransactionThrower;
 use Exception;
 
 class TransactionServices {
 
+    private $apiKeyServices;
+    public function __construct(ApiKeyServices $apiKeyServices)
+    {
+        $this->apiKeyServices = $apiKeyServices;
+    }
 
     public function processCredit(array $data){
         $this->validateRequest($data);
 
+        try {
+            $amount = 300;
+            $balance = 200;
+            TransactionThrower::insufficientFunds($balance,$amount); // Validate first
+            if ($balance < $amount) {
+                TransactionThrower::insufficientFunds($balance, $amount);
+            }
+
+           return $data = 'success';
+        } catch (\Throwable $th) {
+            return handleException($th,'Failed to process Credit');
+        }
 
     }
-
-    
+   
 
     /**
      * validate incoming request
