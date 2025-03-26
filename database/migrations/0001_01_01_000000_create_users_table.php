@@ -14,11 +14,31 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $table->string('email')->unique(); // Ensures email uniqueness
+            $table->timestamp('email_verified_at')->nullable(); // Track email verification
+        
             $table->string('password');
-            $table->rememberToken();
-            $table->timestamps();
+            $table->string('google_id')->nullable(); // For OAuth logins
+        
+            // Use enum for role (more explicit than integer)
+            $table->enum('role', ['user', 'admin', 'super_admin'])->default('user');
+        
+            // User status with index for faster queries
+            $table->enum('status', [
+                'active',     // Normal access
+                'inactive',   // Not activated (e.g., email unverified)
+                'suspended',  // Temporary ban (admin action)
+                'blocked',    // Permanent ban
+                'locked',     // Temporary lock (e.g., failed logins)
+            ])->default('inactive');
+        
+            $table->index('status'); // Add index for faster filtering by status
+        
+            // Developer flag (assuming boolean is sufficient)
+            $table->boolean('is_dev')->default(false); // Better than integer for flags
+        
+            $table->rememberToken(); // For "remember me" functionality
+            $table->timestamps(); // created_at and updated_at
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
