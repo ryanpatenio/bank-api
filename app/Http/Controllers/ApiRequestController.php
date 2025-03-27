@@ -25,6 +25,8 @@ class ApiRequestController extends Controller
         'amount' => 'required|numeric|min:0.01',
         'client_ref' => 'required|string'
      ]);
+
+     $apiKey = $r->header('X-API-Key');
    
      if($validator->fails()){
          return json_message(EXIT_FORM_NULL,'Validation Errors',$validator->errors());
@@ -34,7 +36,8 @@ class ApiRequestController extends Controller
      $validateData = [
          'currency' => $r->input('currency'),
          'amount' => $r->input('amount'),
-         'client_ref' => $r->input('client_ref')
+         'client_ref' => $r->input('client_ref'),
+         'api_key'    => $apiKey
        ];
 
       try {

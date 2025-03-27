@@ -2,7 +2,7 @@
 
 namespace App\Exceptions\Transactions;
 
-class DuplicateTransactionException extends TransactionException
+class DuplicateTransactionsExceptions extends TransactionException
 {
     public function __construct(string $transactionId)
     {

@@ -31,7 +31,7 @@ class ApiKeyServices {
      */
     public function convertCurrencyCodeIntoId( string $currency_code){
         if(empty($currency_code)){
-            throw new Exception('currency id is required');
+             throw new Exception('currency id is required');
         }
     
         return Currencies::where('code',$currency_code)
@@ -40,6 +40,7 @@ class ApiKeyServices {
 
      /**
      * Get User Api Key Data
+     * API KEY Table
      * @return array ['user_id,'api_key,status,callback_url'] | false
      * 
      */

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Model;
 
 class Transactions extends Model
@@ -19,4 +20,11 @@ class Transactions extends Model
         'fee',
         'currency_id'
     ];
+
+    
+    protected $casts = [
+        'type' => TransactionType::class,
+    ];
+
+   
 }
