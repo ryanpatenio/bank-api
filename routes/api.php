@@ -6,9 +6,10 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::middleware('validateApiKey')->group(function(){
-
+    Route::post('/process-credit',[ApiRequestController::class,'credit']);
+    Route::post('/process-debit',[ApiRequestController::class,'debit']);
 
 });
-Route::post('/process-credit',[ApiRequestController::class,'credit']);
+
 Route::get('/test',[ApiKeyController::class,'test']);
 

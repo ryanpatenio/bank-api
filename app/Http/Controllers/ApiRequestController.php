@@ -45,11 +45,46 @@ class ApiRequestController extends Controller
          $processCredit  = $this->transactionServices->processCredit($validateData);
          return $processCredit;
 
-      } catch (TransactionException $e) {       
-         return json_message($e->getCode(),$e->getMessage(),$e->getDetails());
       }
       catch(\Exception $et){
          return json_message(EXIT_BE_ERROR,$et->getMessage());
       }
+   }
+
+   public function debit(Request $r){
+      $apiKey = $r->header('X-API-Key');
+
+      if(!$apiKey){
+         return json_message(EXIT_401,'Invalid Api Key');
+      }
+
+      $validator = Validator::make($r->all(),[
+         'currency' => 'required|string',
+         'amount' => 'required|numeric|min:0.01',
+         'client_ref' => 'required|string'
+      ]);
+      
+      if($validator->fails()){
+         return json_message(EXIT_FORM_NULL,'Validation Errors',$validator->errors());
+      }
+      
+      //data
+      $validateData = [
+            'currency' => $r->input('currency'),
+            'amount' => $r->input('amount'),
+            'client_ref' => $r->input('client_ref'),
+            'api_key'    => $apiKey
+         ];
+      try {
+
+         $processDebit  = $this->transactionServices->processDebit($validateData);
+         return $processDebit;
+
+      } catch (TransactionException $e) {       
+         return json_message($e->getCode(),$e->getMessage(),$e->getDetails());
+      }catch(\Exception $et){
+         return json_message(EXIT_BE_ERROR,$et->getMessage());
+      }
+     
    }
 }

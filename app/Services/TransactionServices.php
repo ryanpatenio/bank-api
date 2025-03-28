@@ -35,10 +35,7 @@ class TransactionServices {
         $userWallet = $this->userWallet($userApiObj['user_id'],$currencyObj->id);
     
         $amount = $data['amount'];
-        $balance = $userWallet->balance;
-
-        TransactionThrower::insufficientFunds($balance,$amount);//validate funds        
-
+       
         $newBalance =  $this->updateWalletBalance($userWallet->id,$amount); //update wallet Balance
 
         //transaction Data 
@@ -68,11 +65,69 @@ class TransactionServices {
             'transaction_id' => $generatedCode,
             'amount' => $amount,
             'currency_id' => $data['currency'],
-            'wallet_balance' => $newBalance
+            'old_balance' => $userWallet->balance,
+            'new_balance' => $newBalance
         ];
         
         return json_message(EXIT_SUCCESS,'Credit transaction successful.',$response);
        
+    }
+
+    public function processDebit(array $data){
+
+        $this->validateRequest($data);
+
+        $userApiObj = $this->apiKeyServices->getUserApiKeyData($data['api_key']);
+        if(!$userApiObj){
+            throw new Exception('Invalid Api Key');
+        }
+        //Objects
+        $currencyObj = $this->apiKeyServices->convertCurrencyCodeIntoId($data['currency']);
+        $userWallet = $this->userWallet($userApiObj['user_id'],$currencyObj->id);
+    
+        $amount = $data['amount'];
+        $balance = $userWallet->balance;
+
+        TransactionThrower::insufficientFunds($balance,$amount);//validate funds    
+
+        //this fee is static it must be change in future for dynamic
+        $fee = $currencyObj->name === "PHP" ? "15" : ($currencyObj->name === "USD" ? "1" : '1');
+        $newBalance =  $this->updateWalletBalance($userWallet->id,-($amount + $fee)); //update wallet Balance
+
+        //transaction Data 
+        $generatedCode = $this->walletServices->generateTransactionID();
+        $type = TransactionType::DEBIT;       
+        $status = 'success';
+        $description = "Account Debit using External Api";
+        $transactionData = [
+            'wallet_id' => $userWallet->id,
+            'currency_id'  => $currencyObj->id,
+            'transaction_id' => $generatedCode,
+            'type'          => $type->value,
+            'client_ref_id'    => $data['client_ref'],
+            'amount'        => $amount,
+            'fee'           => $fee ?? 0,
+            'status'        => $status,
+            'description'   => $description,
+            'api_key_id'    => $userApiObj['id'] //requires for using external api transaction
+        ];
+       
+        $this->validateTransactionData($transactionData);
+
+        $this->createTransaction($transactionData);
+
+        //response data
+        $response = [
+            'transaction_id' => $generatedCode,
+            'amount' => $amount,
+            'fee'    => $fee.$currencyObj->symbol,
+            'total_amount_deducted' => ($fee + $amount),
+            'currency_id' => $data['currency'],
+            'wallet_balance' => $newBalance
+        ];
+        
+        return json_message(EXIT_SUCCESS,'Debit transaction successful.',$response);       
+
     }
    
 
@@ -161,6 +216,7 @@ class TransactionServices {
     private function createTransaction(array $data) :void {
         Transactions::create($data);
     }
+
     /**
      * Validates Transaction Data
      * @throws Exception

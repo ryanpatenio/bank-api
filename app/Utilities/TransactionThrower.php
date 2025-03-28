@@ -11,7 +11,8 @@ use App\Exceptions\Transactions\{
 class TransactionThrower
 {
     public static function insufficientFunds(float $balance, float $amount): void
-    {
+    {   
+        #Debit transaction
         if($balance < $amount){
             throw new InsufficientFundsException($balance, $amount);
         }
