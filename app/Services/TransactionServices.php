@@ -9,6 +9,8 @@ use App\Models\Wallets;
 use App\Utilities\TransactionThrower;
 use Exception;
 
+use Illuminate\Support\Facades\Log;
+
 class TransactionServices {
 
     private $apiKeyServices;
@@ -30,9 +32,12 @@ class TransactionServices {
         if(!$userApiObj){
             throw new Exception('Invalid Api Key');
         }
+
+        $this->isAccountNumberIsExist($data['account_number']);
+
         //Objects
         $currencyObj = $this->apiKeyServices->convertCurrencyCodeIntoId($data['currency']);
-        $userWallet = $this->userWallet($userApiObj['user_id'],$currencyObj->id);
+        $userWallet = $this->userWallet($userApiObj['user_id'],$currencyObj->id,$data['account_number']);
     
         $amount = $data['amount'];
        
@@ -81,9 +86,12 @@ class TransactionServices {
         if(!$userApiObj){
             throw new Exception('Invalid Api Key');
         }
+
+        $this->isAccountNumberIsExist($data['account_number']);
+        
         //Objects
         $currencyObj = $this->apiKeyServices->convertCurrencyCodeIntoId($data['currency']);
-        $userWallet = $this->userWallet($userApiObj['user_id'],$currencyObj->id);
+        $userWallet = $this->userWallet($userApiObj['user_id'],$currencyObj->id,$data['account_number']);
     
         $amount = $data['amount'];
         $balance = $userWallet->balance;
@@ -150,6 +158,11 @@ class TransactionServices {
         if(empty($data['api_key'])){
             throw new Exception('api key is required');
         }
+        if(empty($data['account_number'])){
+            throw new Exception('account number is required');
+        }
+        
+
     }
 
     /**
@@ -182,12 +195,13 @@ class TransactionServices {
      * @return object ['id,user_id,currency_id,account_number,balance']
      * @throws Exception
      */
-    public function userWallet(int $user_id, int $currency_id) : object {
+    public function userWallet(int $user_id, int $currency_id, int $accountNumber) : object {
         $query = Wallets::where('user_id',$user_id)
                 ->where('currency_id',$currency_id)
+                ->where('account_number',$accountNumber)
                 ->first();
         if(!$query){
-           throw  new Exception('No Wallet Found!');
+           throw  new Exception('No Wallet Found or Invalid Account Number!');
         }
         return $query;
     }
@@ -251,6 +265,32 @@ class TransactionServices {
 
     }
 
+    /**
+     * Checks User Wallet Account Number
+     * @return void
+     * @throws Exception
+     */
+    private function isAccountNumberIsExist(int $accountNumber) :void {
+       $cleanAcctNumber = trim((string)$accountNumber);
+
+       // Debug: Log some actual records from the database
+        Log::debug("Sample wallet records:", [
+            'first_record' => Wallets::first()->account_number ?? null,
+            'random_record' => Wallets::inRandomOrder()->first()->account_number ?? null
+        ]);
+        // \Log::debug("BankAPI DB Check", [
+        //     'env_db' => env('DB_DATABASE'),
+        //     'queried_db' => DB::connection()->getDatabaseName(),
+        //     'wallets' => DB::select('SELECT DATABASE() as current_db')
+        // ]);
+       
+        $query = Wallets::where('account_number',$cleanAcctNumber)
+            ->exists();
+        if(!$query){
+            throw new Exception('Account Number not found!');
+        }
+    } 
+   
 }
 
 ?>

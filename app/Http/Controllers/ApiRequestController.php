@@ -8,6 +8,8 @@ use App\Services\TransactionServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
+use Illuminate\Support\Facades\Log;
+
 class ApiRequestController extends Controller
 {  
    private $transactionServices,$apiKeyServices;
@@ -23,7 +25,8 @@ class ApiRequestController extends Controller
      $validator = Validator::make($r->all(),[
         'currency' => 'required|string',
         'amount' => 'required|numeric|min:0.01',
-        'client_ref' => 'required|string'
+        'client_ref' => 'required|string',
+        'account_number' => 'required|integer|min:11'
      ]);
 
      $apiKey = $r->header('X-API-Key');
@@ -37,7 +40,8 @@ class ApiRequestController extends Controller
          'currency' => $r->input('currency'),
          'amount' => $r->input('amount'),
          'client_ref' => $r->input('client_ref'),
-         'api_key'    => $apiKey
+         'api_key'    => $apiKey,
+         'account_number' => $r->input('account_number')
        ];
 
       try {
@@ -61,7 +65,8 @@ class ApiRequestController extends Controller
       $validator = Validator::make($r->all(),[
          'currency' => 'required|string',
          'amount' => 'required|numeric|min:0.01',
-         'client_ref' => 'required|string'
+         'client_ref' => 'required|string',
+         'account_number' => 'required|required|digits:11'
       ]);
       
       if($validator->fails()){
@@ -73,7 +78,8 @@ class ApiRequestController extends Controller
             'currency' => $r->input('currency'),
             'amount' => $r->input('amount'),
             'client_ref' => $r->input('client_ref'),
-            'api_key'    => $apiKey
+            'api_key'    => $apiKey,
+            'account_number' => $r->input('account_number')
          ];
       try {
 
